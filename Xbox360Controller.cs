@@ -26,9 +26,9 @@ namespace VVVV.Nodes
     public class Xbox360Controller : IPluginEvaluate
     {
         #region fields & pins
-        //		[Input("Gamepad Number", DefaultValue = 1, 
-        //			MinValue = 1,  MaxValue = 4)]
-        //		IDiffSpread<int> FGamepadIndex;
+        [Input("Gamepad Number", DefaultValue = 1, 
+            MinValue = 1,  MaxValue = 4)]
+        IDiffSpread<int> FGamepadIndex;
 
         [Output("Left Thumbstick")]
         ISpread<Vector2> FLeftThumbPin;
@@ -94,9 +94,6 @@ namespace VVVV.Nodes
         {
             try
             {
-                //implement a tester here, that raises an exception if no gamepad is conected
-                //also implement a input pin to select the controller number
-
                 FGamepad = new GamepadState(0);
             }
             catch (Exception e)
@@ -110,7 +107,7 @@ namespace VVVV.Nodes
         {
             FGamepad.Update();
 
-            //			FLeftThumbPin.SliceCount = 2;
+            //          FLeftThumbPin.SliceCount = 2;
 
             for (int i = 0; i < SpreadMax; i++)
             {
@@ -140,17 +137,17 @@ namespace VVVV.Nodes
             }
 
 
-            //			Flogger.Log(LogType.Debug, someVec.x.ToString());
+            //          Flogger.Log(LogType.Debug, someVec.x.ToString());
         }
 
         private int getRightTrigger()
         {
-            //			Capabilities gpCapabilities;
-            //			Gamepad gPad;
+            //          Capabilities gpCapabilities;
+            //          Gamepad gPad;
             int valueOut = 255;
 
-            //			gpCapabilities = FGamepad.GetCapabilities(DeviceQueryType.Gamepad);
-            //			gPad = gpCapabilities.Gamepad;
+            //          gpCapabilities = FGamepad.GetCapabilities(DeviceQueryType.Gamepad);
+            //          gPad = gpCapabilities.Gamepad;
 
 
             return valueOut;
