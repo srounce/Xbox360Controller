@@ -1,0 +1,24 @@
+C:\Users\rounce\AppData\Local\Temporary Projects\Xbox360Controller\bin\Release\Xbox360Controller.dll
+C:\Users\rounce\AppData\Local\Temporary Projects\Xbox360Controller\bin\Release\Xbox360Controller.pdb
+C:\Users\rounce\AppData\Local\Temporary Projects\Xbox360Controller\bin\Release\VVVV.Core.dll
+C:\Users\rounce\AppData\Local\Temporary Projects\Xbox360Controller\bin\Release\VVVV.PluginInterfaces.dll
+C:\Users\rounce\AppData\Local\Temporary Projects\Xbox360Controller\bin\Release\VVVV.Utils.dll
+C:\Users\rounce\AppData\Local\Temporary Projects\Xbox360Controller\bin\Release\Microsoft.Practices.Unity.dll
+C:\Users\rounce\AppData\Local\Temporary Projects\Xbox360Controller\bin\Release\ICSharpCode.SharpDevelop.Dom.dll
+C:\Users\rounce\AppData\Local\Temporary Projects\Xbox360Controller\bin\Release\ICSharpCode.NRefactory.dll
+C:\Users\rounce\AppData\Local\Temporary Projects\Xbox360Controller\bin\Release\CommandLine.dll
+C:\Users\rounce\AppData\Local\Temporary Projects\Xbox360Controller\bin\Release\Microsoft.Practices.ServiceLocation.dll
+C:\Users\rounce\AppData\Local\Temporary Projects\Xbox360Controller\bin\Release\Mono.Cecil.dll
+C:\Users\rounce\AppData\Local\Temporary Projects\Xbox360Controller\bin\Release\log4net.dll
+C:\Users\rounce\AppData\Local\Temporary Projects\Xbox360Controller\bin\Release\VVVV.PluginInterfaces.xml
+C:\Users\rounce\AppData\Local\Temporary Projects\Xbox360Controller\bin\Release\VVVV.Utils.xml
+C:\Users\rounce\AppData\Local\Temporary Projects\Xbox360Controller\bin\Release\Microsoft.Practices.Unity.xml
+C:\Users\rounce\AppData\Local\Temporary Projects\Xbox360Controller\bin\Release\CommandLine.xml
+C:\Users\rounce\AppData\Local\Temporary Projects\Xbox360Controller\obj\Release\ResolveAssemblyReference.cache
+C:\Users\rounce\AppData\Local\Temporary Projects\Xbox360Controller\obj\Release\Xbox360Controller.dll
+C:\Users\rounce\AppData\Local\Temporary Projects\Xbox360Controller\obj\Release\Xbox360Controller.pdb
+C:\Users\rounce\documents\visual studio 2010\Projects\Xbox360Controller\Xbox360Controller\bin\Release\Xbox360Controller.dll
+C:\Users\rounce\documents\visual studio 2010\Projects\Xbox360Controller\Xbox360Controller\bin\Release\Xbox360Controller.pdb
+C:\Users\rounce\documents\visual studio 2010\Projects\Xbox360Controller\Xbox360Controller\obj\Release\ResolveAssemblyReference.cache
+C:\Users\rounce\documents\visual studio 2010\Projects\Xbox360Controller\Xbox360Controller\obj\Release\Xbox360Controller.dll
+C:\Users\rounce\documents\visual studio 2010\Projects\Xbox360Controller\Xbox360Controller\obj\Release\Xbox360Controller.pdb
