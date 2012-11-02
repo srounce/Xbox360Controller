@@ -1,5 +1,0 @@
-C:\Users\rounce\documents\visual studio 2010\Projects\Xbox360Controller\Xbox360Controller\bin\Debug\Xbox360Controller.dll
-C:\Users\rounce\documents\visual studio 2010\Projects\Xbox360Controller\Xbox360Controller\bin\Debug\Xbox360Controller.pdb
-C:\Users\rounce\documents\visual studio 2010\Projects\Xbox360Controller\Xbox360Controller\obj\Debug\ResolveAssemblyReference.cache
-C:\Users\rounce\documents\visual studio 2010\Projects\Xbox360Controller\Xbox360Controller\obj\Debug\Xbox360Controller.dll
-C:\Users\rounce\documents\visual studio 2010\Projects\Xbox360Controller\Xbox360Controller\obj\Debug\Xbox360Controller.pdb

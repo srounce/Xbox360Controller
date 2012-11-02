@@ -1,277 +1,329 @@
 ﻿#region usings
 using System;
+using System.Collections.Generic;
 using System.ComponentModel.Composition;
-
-using VVVV.PluginInterfaces.V1;
+using System.Globalization;
+using SlimDX.DirectInput;
 using VVVV.PluginInterfaces.V2;
-using VVVV.Utils.VColor;
-using VVVV.Utils.VMath;
 
 using SlimDX;
 using SlimDX.XInput;
 
 using VVVV.Core.Logging;
+
 #endregion usings
 
-namespace VVVV.Nodes
+[PluginInfo(Name = "Xbox360Controller", Category = "Devices", Version = "1.0.0", Help = "Allows you to use XBox360 Controller", Tags = "joystick xbox")]
+public class Xbox360Controller : IPluginEvaluate, IPartImportsSatisfiedNotification
 {
-    #region PluginInfo
-    [PluginInfo(Name = "Xbox360Controller",
-                Category = "Devices",
-                Version = "1.0.0",
-                Help = "",
-                Tags = "")]
-    #endregion PluginInfo
+	#region fields & pins
 
-    public class Xbox360Controller : IPluginEvaluate
-    {
-        #region fields & pins
-        /*[Input("Gamepad Number", DefaultValue = 1, 
-            MinValue = 1,  MaxValue = 4)]
-        IDiffSpread<int> FGamepadIndex;*/
+	private const string ControllersEnumName = "XBox360Controllers";
 
-        [Output("Left Thumbstick")]
-        ISpread<Vector2> FLeftThumbPin;
+	[Input("Device", EnumName = ControllersEnumName)]
+	IDiffSpread<EnumEntry> FGamePadsEnumInput;
 
-        [Output("Left Thumbstick Pressed")]
-        ISpread<bool> FLeftThumbPressPin;
+	[Input("Refresh", IsBang = true, IsSingle = true)]
+	IDiffSpread<bool> FRefreshInput;
 
-        [Output("Right Thumbstick")]
-        ISpread<Vector2> FRightThumbPin;
+	[Output("Left Thumbstick")]
+	ISpread<Vector2> FLeftThumbPin;
 
-        [Output("Right Thumbstick Pressed")]
-        ISpread<bool> FRightThumbPressPin;
+	[Output("Left Thumbstick Pressed")]
+	ISpread<bool> FLeftThumbPressPin;
 
-        [Output("Left Trigger")]
-        ISpread<double> FLeftTriggerPin;
+	[Output("Right Thumbstick")]
+	ISpread<Vector2> FRightThumbPin;
 
-        [Output("Left Shoulder Button")]
-        ISpread<bool> FLeftShoulderPin;
+	[Output("Right Thumbstick Pressed")]
+	ISpread<bool> FRightThumbPressPin;
 
-        [Output("Right Trigger")]
-        ISpread<double> FRightTriggerPin;
+	[Output("Left Trigger")]
+	ISpread<double> FLeftTriggerPin;
 
-        [Output("Right Shoulder Button")]
-        ISpread<bool> FRightShoulderPin;
+	[Output("Left Shoulder Button")]
+	ISpread<bool> FLeftShoulderPin;
 
-        [Output("A Button")]
-        ISpread<bool> FAButtonPin;
+	[Output("Right Trigger")]
+	ISpread<double> FRightTriggerPin;
 
-        [Output("B Button")]
-        ISpread<bool> FBButtonPin;
+	[Output("Right Shoulder Button")]
+	ISpread<bool> FRightShoulderPin;
 
-        [Output("X Button")]
-        ISpread<bool> FXButtonPin;
+	[Output("A Button")]
+	ISpread<bool> FAButtonPin;
 
-        [Output("Y Button")]
-        ISpread<bool> FYButtonPin;
+	[Output("B Button")]
+	ISpread<bool> FBButtonPin;
 
-        [Output("D-Pad Up")]
-        ISpread<bool> FDpadUpPin;
+	[Output("X Button")]
+	ISpread<bool> FXButtonPin;
 
-        [Output("D-Pad Down")]
-        ISpread<bool> FDpadDownPin;
+	[Output("Y Button")]
+	ISpread<bool> FYButtonPin;
 
-        [Output("D-Pad Left")]
-        ISpread<bool> FDpadLeftPin;
+	[Output("D-Pad Up")]
+	ISpread<bool> FDpadUpPin;
 
-        [Output("D-Pad Right")]
-        ISpread<bool> FDpadRightPin;
+	[Output("D-Pad Down")]
+	ISpread<bool> FDpadDownPin;
 
-        [Output("Start")]
-        ISpread<bool> FStartPin;
+	[Output("D-Pad Left")]
+	ISpread<bool> FDpadLeftPin;
 
-        [Output("Back")]
-        ISpread<bool> FBackPin;
+	[Output("D-Pad Right")]
+	ISpread<bool> FDpadRightPin;
 
-        [Import()]
-        ILogger Flogger;
+	[Output("Start")]
+	ISpread<bool> FStartPin;
 
-        private GamepadState FGamepad;
-        #endregion fields & pins
+	[Output("Back")]
+	ISpread<bool> FBackPin;
 
-        public Xbox360Controller()
-        {
-            try
-            {
-                FGamepad = new GamepadState(0);
-            }
-            catch (Exception e)
-            {
-                Flogger.Log(LogType.Error, e.Message);
-            }
-        }
+	[Import]
+	ILogger Flogger;
 
-        //called each frame by vvvv
-        public void Evaluate(int SpreadMax)
-        {
-            FGamepad.Update();
+	private readonly List<GamepadState> FGamepads = new List<GamepadState>(4);
+	private readonly DirectInput FDirectInput = new DirectInput();
+	private int FGamepadsCount;
 
-            for (int i = 0; i < SpreadMax; i++)
-            {
+	#endregion fields & pins
 
-                FLeftThumbPin[i] = FGamepad.LeftStick.Position;
-                FLeftThumbPressPin[i] = FGamepad.LeftStick.Clicked;
-                FRightThumbPin[i] = FGamepad.RightStick.Position;
-                FRightThumbPressPin[i] = FGamepad.RightStick.Clicked;
+	public void OnImportsSatisfied()
+	{
+		CheckDevices();
+	}
 
-                FLeftTriggerPin[i] = FGamepad.LeftTrigger;
-                FLeftShoulderPin[i] = FGamepad.LeftShoulder;
-                FRightTriggerPin[i] = FGamepad.RightTrigger;
-                FRightShoulderPin[i] = FGamepad.RightShoulder;
+	private void CheckDevices()
+	{
+		var devices = FDirectInput.GetDevices(DeviceClass.GameController, DeviceEnumerationFlags.AttachedOnly);
 
-                FAButtonPin[i] = FGamepad.A;
-                FBButtonPin[i] = FGamepad.B;
-                FXButtonPin[i] = FGamepad.X;
-                FYButtonPin[i] = FGamepad.Y;
+		for (int i = 0; i < devices.Count; i++)
+		{
+			if (!devices[i].InstanceName.Contains("XBOX")) devices.RemoveAt(i);
+		}
 
-                FDpadUpPin[i] = FGamepad.DPad.Up;
-                FDpadDownPin[i] = FGamepad.DPad.Down;
-                FDpadLeftPin[i] = FGamepad.DPad.Left;
-                FDpadRightPin[i] = FGamepad.DPad.Right;
+		string[] names = new string[devices.Count];
 
-                FStartPin[i] = FGamepad.Start;
-                FBackPin[i] = FGamepad.Back;
-            }
-        }
-    }
+		for (int j = 0; j < devices.Count; j++)
+		{
+			names[j] = devices[j].InstanceName + " #" + j.ToString(CultureInfo.InvariantCulture);
+		}
 
-    // SlimDX Wrapper developed by
-    // Zaknafein/Renaud Bédard of The Instruction Limit
-    // http://theinstructionlimit.com
+		EnumManager.UpdateEnum(ControllersEnumName, names[0], names);
+	}
 
-    public class GamepadState
-    {
-        uint lastPacket;
+	private void InitControllers()
+	{
+		FGamepads.Clear();
 
-        public GamepadState(UserIndex userIndex)
-        {
-            UserIndex = userIndex;
-            Controller = new Controller(userIndex);
+		for (int i = 0; i < FGamePadsEnumInput.SliceCount; i++)
+		{
+			EnumEntry entry = FGamePadsEnumInput[i];
 
-        }
+			if(entry == "(nil)") continue;
 
-        public readonly UserIndex UserIndex;
-        public readonly Controller Controller;
+			int sliceIndex = int.Parse(entry.Name.Split('#')[1]);
 
-        public DPadState DPad { get; private set; }
-        public ThumbstickState LeftStick { get; private set; }
-        public ThumbstickState RightStick { get; private set; }
+			UserIndex index = (UserIndex) sliceIndex;
+			
+			FGamepads.Add(new GamepadState(index));
+		}
 
-        public bool A { get; private set; }
-        public bool B { get; private set; }
-        public bool X { get; private set; }
-        public bool Y { get; private set; }
+		FGamepadsCount = FGamepads.Count;
+	}
 
-        public bool RightShoulder { get; private set; }
-        public bool LeftShoulder { get; private set; }
+	//called each frame by vvvv
+	public void Evaluate(int spreadMax)
+	{
+		if (FRefreshInput[0]) CheckDevices();
 
-        public bool Start { get; private set; }
-        public bool Back { get; private set; }
+		if (FGamePadsEnumInput.IsChanged) InitControllers();
 
-        public float RightTrigger { get; private set; }
-        public float LeftTrigger { get; private set; }
+		FLeftThumbPin.SliceCount = FGamepadsCount;
+		FLeftThumbPressPin.SliceCount = FGamepadsCount;
+		FRightThumbPin.SliceCount = FGamepadsCount;
+		FRightThumbPressPin.SliceCount = FGamepadsCount;
+		FLeftTriggerPin.SliceCount = FGamepadsCount;
+		FLeftShoulderPin.SliceCount = FGamepadsCount;
+		FRightTriggerPin.SliceCount = FGamepadsCount;
+		FRightShoulderPin.SliceCount = FGamepadsCount;
+		FAButtonPin.SliceCount = FGamepadsCount;
+		FBButtonPin.SliceCount = FGamepadsCount;
+		FXButtonPin.SliceCount = FGamepadsCount;
+		FYButtonPin.SliceCount = FGamepadsCount;
+		FDpadUpPin.SliceCount = FGamepadsCount;
+		FDpadDownPin.SliceCount = FGamepadsCount;
+		FDpadLeftPin.SliceCount = FGamepadsCount;
+		FDpadRightPin.SliceCount = FGamepadsCount;
+		FStartPin.SliceCount = FGamepadsCount;
+		FBackPin.SliceCount = FGamepadsCount;
 
-        public bool Connected
-        {
-            get { return Controller.IsConnected; }
-        }
+		for (int i = 0; i < FGamepadsCount; i++)
+		{
+			FGamepads[i].Update();
 
-        public void Vibrate(float leftMotor, float rightMotor)
-        {
-            Controller.SetVibration(new Vibration
-            {
-                LeftMotorSpeed = (ushort)(MathHelper.Saturate(leftMotor) * ushort.MaxValue),
-                RightMotorSpeed = (ushort)(MathHelper.Saturate(rightMotor) * ushort.MaxValue)
-            });
-        }
+			FLeftThumbPin[i] = FGamepads[i].LeftStick.Position;
+			FLeftThumbPressPin[i] = FGamepads[i].LeftStick.Clicked;
+			FRightThumbPin[i] = FGamepads[i].RightStick.Position;
+			FRightThumbPressPin[i] = FGamepads[i].RightStick.Clicked;
 
-        public void Update()
-        {
-            // If not connected, nothing to update
-            if (!Connected) return;
+			FLeftTriggerPin[i] = FGamepads[i].LeftTrigger;
+			FLeftShoulderPin[i] = FGamepads[i].LeftShoulder;
+			FRightTriggerPin[i] = FGamepads[i].RightTrigger;
+			FRightShoulderPin[i] = FGamepads[i].RightShoulder;
 
-            // If same packet, nothing to update
-            State state = Controller.GetState();
-            if (lastPacket == state.PacketNumber) return;
-            lastPacket = state.PacketNumber;
+			FAButtonPin[i] = FGamepads[i].A;
+			FBButtonPin[i] = FGamepads[i].B;
+			FXButtonPin[i] = FGamepads[i].X;
+			FYButtonPin[i] = FGamepads[i].Y;
 
-            var gamepadState = state.Gamepad;
+			FDpadUpPin[i] = FGamepads[i].DPad.Up;
+			FDpadDownPin[i] = FGamepads[i].DPad.Down;
+			FDpadLeftPin[i] = FGamepads[i].DPad.Left;
+			FDpadRightPin[i] = FGamepads[i].DPad.Right;
 
-            // Shoulders
-            LeftShoulder = (gamepadState.Buttons & GamepadButtonFlags.LeftShoulder) != 0;
-            RightShoulder = (gamepadState.Buttons & GamepadButtonFlags.RightShoulder) != 0;
+			FStartPin[i] = FGamepads[i].Start;
+			FBackPin[i] = FGamepads[i].Back;
+		}
+	}
 
-            // Triggers
-            LeftTrigger = gamepadState.LeftTrigger / (float)byte.MaxValue;
-            RightTrigger = gamepadState.RightTrigger / (float)byte.MaxValue;
+}
 
-            // Buttons
-            Start = (gamepadState.Buttons & GamepadButtonFlags.Start) != 0;
-            Back = (gamepadState.Buttons & GamepadButtonFlags.Back) != 0;
+// SlimDX Wrapper developed by
+// Zaknafein/Renaud Bédard of The Instruction Limit
+// http://theinstructionlimit.com
 
-            A = (gamepadState.Buttons & GamepadButtonFlags.A) != 0;
-            B = (gamepadState.Buttons & GamepadButtonFlags.B) != 0;
-            X = (gamepadState.Buttons & GamepadButtonFlags.X) != 0;
-            Y = (gamepadState.Buttons & GamepadButtonFlags.Y) != 0;
+public class GamepadState
+{
+	uint FLastPacket;
 
-            // D-Pad
-            DPad = new DPadState((gamepadState.Buttons & GamepadButtonFlags.DPadUp) != 0,
-                                 (gamepadState.Buttons & GamepadButtonFlags.DPadDown) != 0,
-                                 (gamepadState.Buttons & GamepadButtonFlags.DPadLeft) != 0,
-                                 (gamepadState.Buttons & GamepadButtonFlags.DPadRight) != 0);
+	public GamepadState(UserIndex userIndex)
+	{
+		UserIndex = userIndex;
+		Controller = new Controller(userIndex);
 
-            // Thumbsticks
-            LeftStick = new ThumbstickState(
-                Normalize(gamepadState.LeftThumbX, gamepadState.LeftThumbY, Gamepad.GamepadLeftThumbDeadZone),
-                (gamepadState.Buttons & GamepadButtonFlags.LeftThumb) != 0);
-            RightStick = new ThumbstickState(
-                Normalize(gamepadState.RightThumbX, gamepadState.RightThumbY, Gamepad.GamepadRightThumbDeadZone),
-                (gamepadState.Buttons & GamepadButtonFlags.RightThumb) != 0);
-        }
+	}
 
-        static Vector2 Normalize(short rawX, short rawY, short threshold)
-        {
-            var value = new Vector2(rawX, rawY);
-            var magnitude = value.Length();
-            var direction = value / (magnitude == 0 ? 1 : magnitude);
+	public readonly UserIndex UserIndex;
+	public readonly Controller Controller;
 
-            var normalizedMagnitude = 0.0f;
-            if (magnitude - threshold > 0)
-                normalizedMagnitude = Math.Min((magnitude - threshold) / (short.MaxValue - threshold), 1);
+	public DPadState DPad { get; private set; }
+	public ThumbstickState LeftStick { get; private set; }
+	public ThumbstickState RightStick { get; private set; }
 
-            return direction * normalizedMagnitude;
-        }
+	public bool A { get; private set; }
+	public bool B { get; private set; }
+	public bool X { get; private set; }
+	public bool Y { get; private set; }
 
-        public struct DPadState
-        {
-            public readonly bool Up, Down, Left, Right;
+	public bool RightShoulder { get; private set; }
+	public bool LeftShoulder { get; private set; }
 
-            public DPadState(bool up, bool down, bool left, bool right)
-            {
-                Up = up; Down = down; Left = left; Right = right;
-            }
-        }
+	public bool Start { get; private set; }
+	public bool Back { get; private set; }
 
-        public struct ThumbstickState
-        {
-            public readonly Vector2 Position;
-            public readonly bool Clicked;
+	public float RightTrigger { get; private set; }
+	public float LeftTrigger { get; private set; }
 
-            public ThumbstickState(Vector2 position, bool clicked)
-            {
-                Clicked = clicked;
-                Position = position;
-            }
-        }
-    }
+	public bool Connected
+	{
+		get { return Controller.IsConnected; }
+	}
 
-    public static class MathHelper
-    {
-        public static float Saturate(float value)
-        {
-            return value < 0 ? 0 : value > 1 ? 1 : value;
-        }
-    }
+	public void Vibrate(float leftMotor, float rightMotor)
+	{
+		Controller.SetVibration(new Vibration
+		{
+			LeftMotorSpeed = (ushort)(MathHelper.Saturate(leftMotor) * ushort.MaxValue),
+			RightMotorSpeed = (ushort)(MathHelper.Saturate(rightMotor) * ushort.MaxValue)
+		});
+	}
 
+	public void Update()
+	{
+		// If not connected, nothing to update
+		if (!Connected) return;
+
+		// If same packet, nothing to update
+		State state = Controller.GetState();
+		if (FLastPacket == state.PacketNumber) return;
+		FLastPacket = state.PacketNumber;
+
+		var gamepadState = state.Gamepad;
+
+		// Shoulders
+		LeftShoulder = (gamepadState.Buttons & GamepadButtonFlags.LeftShoulder) != 0;
+		RightShoulder = (gamepadState.Buttons & GamepadButtonFlags.RightShoulder) != 0;
+
+		// Triggers
+		LeftTrigger = gamepadState.LeftTrigger / (float)byte.MaxValue;
+		RightTrigger = gamepadState.RightTrigger / (float)byte.MaxValue;
+
+		// Buttons
+		Start = (gamepadState.Buttons & GamepadButtonFlags.Start) != 0;
+		Back = (gamepadState.Buttons & GamepadButtonFlags.Back) != 0;
+
+		A = (gamepadState.Buttons & GamepadButtonFlags.A) != 0;
+		B = (gamepadState.Buttons & GamepadButtonFlags.B) != 0;
+		X = (gamepadState.Buttons & GamepadButtonFlags.X) != 0;
+		Y = (gamepadState.Buttons & GamepadButtonFlags.Y) != 0;
+
+		// D-Pad
+		DPad = new DPadState((gamepadState.Buttons & GamepadButtonFlags.DPadUp) != 0,
+							 (gamepadState.Buttons & GamepadButtonFlags.DPadDown) != 0,
+							 (gamepadState.Buttons & GamepadButtonFlags.DPadLeft) != 0,
+							 (gamepadState.Buttons & GamepadButtonFlags.DPadRight) != 0);
+
+		// Thumbsticks
+		LeftStick = new ThumbstickState(
+			Normalize(gamepadState.LeftThumbX, gamepadState.LeftThumbY, Gamepad.GamepadLeftThumbDeadZone),
+			(gamepadState.Buttons & GamepadButtonFlags.LeftThumb) != 0);
+		RightStick = new ThumbstickState(
+			Normalize(gamepadState.RightThumbX, gamepadState.RightThumbY, Gamepad.GamepadRightThumbDeadZone),
+			(gamepadState.Buttons & GamepadButtonFlags.RightThumb) != 0);
+	}
+
+	static Vector2 Normalize(short rawX, short rawY, short threshold)
+	{
+		var value = new Vector2(rawX, rawY);
+		var magnitude = value.Length();
+		var direction = value / (magnitude == 0 ? 1 : magnitude);
+
+		var normalizedMagnitude = 0.0f;
+		if (magnitude - threshold > 0)
+			normalizedMagnitude = Math.Min((magnitude - threshold) / (short.MaxValue - threshold), 1);
+
+		return direction * normalizedMagnitude;
+	}
+
+	public struct DPadState
+	{
+		public readonly bool Up, Down, Left, Right;
+
+		public DPadState(bool up, bool down, bool left, bool right)
+		{
+			Up = up; Down = down; Left = left; Right = right;
+		}
+	}
+
+	public struct ThumbstickState
+	{
+		public readonly Vector2 Position;
+		public readonly bool Clicked;
+
+		public ThumbstickState(Vector2 position, bool clicked)
+		{
+			Clicked = clicked;
+			Position = position;
+		}
+	}
+}
+
+public static class MathHelper
+{
+	public static float Saturate(float value)
+	{
+		return value < 0 ? 0 : value > 1 ? 1 : value;
+	}
 }
