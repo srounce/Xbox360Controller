@@ -33,10 +33,14 @@
   <ItemGroup>
     <Reference Include="SlimDX, Version=4.0.10.43, Culture=neutral, PublicKeyToken=b1b0c32fd1ffe4f9, processorArchitecture=x86">
       <SpecificVersion>False</SpecificVersion>
-      <HintPath>..\..\..\..\..\..\..\vvvv\bin\managed\SlimDX.dll</HintPath>
+      <HintPath>..\..\..\..\..\Program Files (x86)\vvvv_45beta28.1\lib\core\SlimDX.dll</HintPath>
+      <Private>False</Private>
     </Reference>
     <Reference Include="System" />
-    <Reference Include="System.ComponentModel.Composition" />
+    <Reference Include="System.ComponentModel.Composition.Codeplex">
+      <HintPath>..\..\..\..\..\Program Files (x86)\vvvv_45beta28.1\lib\core\System.ComponentModel.Composition.Codeplex.dll</HintPath>
+      <Private>False</Private>
+    </Reference>
     <Reference Include="System.Core" />
     <Reference Include="System.Xml.Linq" />
     <Reference Include="System.Data.DataSetExtensions" />
@@ -44,15 +48,15 @@
     <Reference Include="System.Data" />
     <Reference Include="System.Xml" />
     <Reference Include="VVVV.Core">
-      <HintPath>..\..\..\..\..\..\..\vvvv\bin\managed\VVVV.Core.dll</HintPath>
+      <HintPath>..\..\..\..\..\Program Files (x86)\vvvv_45beta28.1\lib\core\VVVV.Core.dll</HintPath>
       <Private>False</Private>
     </Reference>
     <Reference Include="VVVV.PluginInterfaces">
-      <HintPath>..\..\..\..\..\..\..\vvvv\bin\managed\VVVV.PluginInterfaces.dll</HintPath>
+      <HintPath>..\..\..\..\..\Program Files (x86)\vvvv_45beta28.1\lib\core\VVVV.PluginInterfaces.dll</HintPath>
       <Private>False</Private>
     </Reference>
     <Reference Include="VVVV.Utils">
-      <HintPath>..\..\..\..\..\..\..\vvvv\bin\managed\VVVV.Utils.dll</HintPath>
+      <HintPath>..\..\..\..\..\Program Files (x86)\vvvv_45beta28.1\lib\core\VVVV.Utils.dll</HintPath>
       <Private>False</Private>
     </Reference>
   </ItemGroup>
