@@ -3,7 +3,6 @@ using System;
 using System.Collections.Generic;
 using System.ComponentModel.Composition;
 using System.Globalization;
-using SlimDX.DirectInput;
 using VVVV.PluginInterfaces.V2;
 
 using SlimDX;
@@ -83,62 +82,82 @@ public class Xbox360Controller : IPluginEvaluate, IPartImportsSatisfiedNotificat
 	[Import]
 	ILogger Flogger;
 
-	private readonly List<GamepadState> FGamepads = new List<GamepadState>(4);
-	private readonly DirectInput FDirectInput = new DirectInput();
+	private readonly List<GamepadState> FAllGamepads = new List<GamepadState>(4);
+	private readonly List<GamepadState> FConnectedGamepads = new List<GamepadState>(4);
+	private readonly List<GamepadState> FSelectedGamepads = new List<GamepadState>(4);
 	private int FGamepadsCount;
 
 	#endregion fields & pins
 
 	public void OnImportsSatisfied()
 	{
-		CheckDevices();
-	}
-
-	private void CheckDevices()
-	{
-		var devices = FDirectInput.GetDevices(DeviceClass.GameController, DeviceEnumerationFlags.AttachedOnly);
-
-		if(devices.Count == 0) return;
-
-		for (int i = 0; i < devices.Count; i++)
+		for (int i = 0; i < 4; i++)
 		{
-			if (!devices[i].InstanceName.Contains("XBOX")) devices.RemoveAt(i);
+			var gamepad = new GamepadState((UserIndex)i);
+			FAllGamepads.Add(gamepad);
 		}
 
-		string[] names = new string[devices.Count];
+		CheckConnectedDevices();
+	}
 
-		for (int j = 0; j < devices.Count; j++)
+	private void CheckConnectedDevices()
+	{
+		FConnectedGamepads.Clear();
+
+		for (int i = 0; i < 4; i++)
 		{
-			names[j] = devices[j].InstanceName + " #" + j.ToString(CultureInfo.InvariantCulture);
+			if(FAllGamepads[i].Connected)
+			{
+				FConnectedGamepads.Add(FAllGamepads[i]);
+			}
+		}
+
+		string[] names;
+
+		if(FConnectedGamepads.Count == 0)
+		{
+			names = new string[1];
+			names[0] = "(nil)";
+
+			EnumManager.UpdateEnum(ControllersEnumName, names[0], names);
+			return;
+		}
+
+		names = new string[FConnectedGamepads.Count];
+		for (int j = 0; j < FConnectedGamepads.Count; j++)
+		{
+			names[j] = "XBOX 360 Controller Player " + FConnectedGamepads[j].UserIndex + " #" + j.ToString(CultureInfo.InvariantCulture);
 		}
 
 		EnumManager.UpdateEnum(ControllersEnumName, names[0], names);
+
+		InitControllers();
 	}
 
 	private void InitControllers()
 	{
-		FGamepads.Clear();
+		FSelectedGamepads.Clear();
 
 		for (int i = 0; i < FGamePadsEnumInput.SliceCount; i++)
 		{
 			EnumEntry entry = FGamePadsEnumInput[i];
 
-			if(entry == "(nil)") continue;
+			if(entry == "(nil)" || entry.Name == null) continue;
 
 			int sliceIndex = int.Parse(entry.Name.Split('#')[1]);
 
-			UserIndex index = (UserIndex) sliceIndex;
-			
-			FGamepads.Add(new GamepadState(index));
+			if(sliceIndex >= FConnectedGamepads.Count) continue;
+
+			FSelectedGamepads.Add(FConnectedGamepads[sliceIndex]);
 		}
 
-		FGamepadsCount = FGamepads.Count;
+		FGamepadsCount = FSelectedGamepads.Count;
 	}
 
 	//called each frame by vvvv
 	public void Evaluate(int spreadMax)
 	{
-		if (FRefreshInput[0]) CheckDevices();
+		if (FRefreshInput[0]) CheckConnectedDevices();
 
 		if (FGamePadsEnumInput.IsChanged) InitControllers();
 
@@ -163,30 +182,30 @@ public class Xbox360Controller : IPluginEvaluate, IPartImportsSatisfiedNotificat
 
 		for (int i = 0; i < FGamepadsCount; i++)
 		{
-			FGamepads[i].Update();
+			FSelectedGamepads[i].Update();
 
-			FLeftThumbPin[i] = FGamepads[i].LeftStick.Position;
-			FLeftThumbPressPin[i] = FGamepads[i].LeftStick.Clicked;
-			FRightThumbPin[i] = FGamepads[i].RightStick.Position;
-			FRightThumbPressPin[i] = FGamepads[i].RightStick.Clicked;
+			FLeftThumbPin[i] = FSelectedGamepads[i].LeftStick.Position;
+			FLeftThumbPressPin[i] = FSelectedGamepads[i].LeftStick.Clicked;
+			FRightThumbPin[i] = FSelectedGamepads[i].RightStick.Position;
+			FRightThumbPressPin[i] = FSelectedGamepads[i].RightStick.Clicked;
 
-			FLeftTriggerPin[i] = FGamepads[i].LeftTrigger;
-			FLeftShoulderPin[i] = FGamepads[i].LeftShoulder;
-			FRightTriggerPin[i] = FGamepads[i].RightTrigger;
-			FRightShoulderPin[i] = FGamepads[i].RightShoulder;
+			FLeftTriggerPin[i] = FSelectedGamepads[i].LeftTrigger;
+			FLeftShoulderPin[i] = FSelectedGamepads[i].LeftShoulder;
+			FRightTriggerPin[i] = FSelectedGamepads[i].RightTrigger;
+			FRightShoulderPin[i] = FSelectedGamepads[i].RightShoulder;
 
-			FAButtonPin[i] = FGamepads[i].A;
-			FBButtonPin[i] = FGamepads[i].B;
-			FXButtonPin[i] = FGamepads[i].X;
-			FYButtonPin[i] = FGamepads[i].Y;
+			FAButtonPin[i] = FSelectedGamepads[i].A;
+			FBButtonPin[i] = FSelectedGamepads[i].B;
+			FXButtonPin[i] = FSelectedGamepads[i].X;
+			FYButtonPin[i] = FSelectedGamepads[i].Y;
 
-			FDpadUpPin[i] = FGamepads[i].DPad.Up;
-			FDpadDownPin[i] = FGamepads[i].DPad.Down;
-			FDpadLeftPin[i] = FGamepads[i].DPad.Left;
-			FDpadRightPin[i] = FGamepads[i].DPad.Right;
+			FDpadUpPin[i] = FSelectedGamepads[i].DPad.Up;
+			FDpadDownPin[i] = FSelectedGamepads[i].DPad.Down;
+			FDpadLeftPin[i] = FSelectedGamepads[i].DPad.Left;
+			FDpadRightPin[i] = FSelectedGamepads[i].DPad.Right;
 
-			FStartPin[i] = FGamepads[i].Start;
-			FBackPin[i] = FGamepads[i].Back;
+			FStartPin[i] = FSelectedGamepads[i].Start;
+			FBackPin[i] = FSelectedGamepads[i].Back;
 		}
 	}
 
