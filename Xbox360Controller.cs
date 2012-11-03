@@ -98,6 +98,8 @@ public class Xbox360Controller : IPluginEvaluate, IPartImportsSatisfiedNotificat
 	{
 		var devices = FDirectInput.GetDevices(DeviceClass.GameController, DeviceEnumerationFlags.AttachedOnly);
 
+		if(devices.Count == 0) return;
+
 		for (int i = 0; i < devices.Count; i++)
 		{
 			if (!devices[i].InstanceName.Contains("XBOX")) devices.RemoveAt(i);
