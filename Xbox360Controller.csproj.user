@@ -1,3 +1,8 @@
 ﻿<?xml version="1.0" encoding="utf-8"?>
 <Project ToolsVersion="4.0" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
+  <PropertyGroup Condition="'$(Configuration)|$(Platform)' == 'Debug|AnyCPU'">
+    <StartAction>Program</StartAction>
+    <StartProgram>C:\Program Files (x86)\vvvv_45beta28.1\vvvv.exe</StartProgram>
+    <StartArguments>/o "C:\Users\Vadim\Documents\GitRepos\Xbox360Controller\_test.v4p"</StartArguments>
+  </PropertyGroup>
 </Project>
